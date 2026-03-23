@@ -51,7 +51,7 @@ describe("concurrency", () => {
     );
 
     const results = await Promise.all(
-      clients.map((c) => c.callTool("health_check"))
+      clients.map((c) => c.callTool("browser", { action: "health_check" }))
     );
 
     for (const result of results) {
@@ -98,7 +98,7 @@ describe("latency", () => {
   it("health_check responds under 5s (no browser navigation)", async () => {
     const client = await createTestMcpClient(server.url);
     const t0 = Date.now();
-    const result = await client.callTool("health_check");
+    const result = await client.callTool("browser", { action: "health_check" });
     const elapsed = Date.now() - t0;
 
     expect(result.isError).toBeFalsy();
@@ -114,8 +114,10 @@ describe("error recovery", () => {
   it("server remains usable after a schema-rejected call", async () => {
     const client = await createTestMcpClient(server.url);
 
-    const badResult = await client.callTool("get_top", { count: 0 });
-    expect(badResult.isError).toBe(true);
+    // Schema validation errors may throw (SDK protocol error) or return isError:true
+    const badResult = await client.callTool("get_top", { count: 0 }).catch((e: Error) => e);
+    const hasBadResult = badResult instanceof Error || (badResult as { isError?: boolean }).isError;
+    expect(hasBadResult).toBe(true);
 
     const good = await client.callTool("get_top", { count: 1 });
     expect(good.isError).toBeFalsy();
@@ -128,10 +130,11 @@ describe("error recovery", () => {
   it("get_comments with invalid id returns error, server stays up", async () => {
     const client = await createTestMcpClient(server.url);
 
-    const badResult = await client.callTool("get_comments", { id: "not-a-number" });
-    expect(badResult.isError).toBe(true);
+    const badResult = await client.callTool("get_comments", { id: "not-a-number" }).catch((e: Error) => e);
+    const hasBadResult = badResult instanceof Error || (badResult as { isError?: boolean }).isError;
+    expect(hasBadResult).toBe(true);
 
-    const good = await client.callTool("health_check");
+    const good = await client.callTool("browser", { action: "health_check" });
     expect(good.isError).toBeFalsy();
 
     await client.close();

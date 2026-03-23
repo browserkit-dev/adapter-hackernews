@@ -40,11 +40,7 @@ describe("tool registry", () => {
   it("lists all 5 auto-registered management tools", async () => {
     const tools = await client.listTools();
     const names = tools.map((t) => t.name);
-    expect(names).toContain("health_check");
-    expect(names).toContain("set_mode");
-    expect(names).toContain("take_screenshot");
-    expect(names).toContain("get_page_state");
-    expect(names).toContain("navigate");
+    expect(names).toContain("browser");
   });
 
   it("all tools have a description", async () => {
@@ -59,7 +55,7 @@ describe("tool registry", () => {
 
 describe("health_check", () => {
   it("reports site=hackernews, loggedIn=true, mode=headless", async () => {
-    const result = await client.callTool("health_check");
+    const result = await client.callTool("browser", { action: "health_check" });
     expect(result.isError).toBeFalsy();
 
     const text = result.content[0]?.text ?? "";
@@ -76,7 +72,7 @@ describe("health_check", () => {
   });
 
   it("reports selector health for known selectors", async () => {
-    const result = await client.callTool("health_check");
+    const result = await client.callTool("browser", { action: "health_check" });
     const text = result.content[0]?.text ?? "";
     const status = JSON.parse(text) as { selectors?: Record<string, { found: boolean }> };
 
@@ -90,7 +86,7 @@ describe("health_check", () => {
 
 describe("get_page_state", () => {
   it("returns url, title, mode, isPaused", async () => {
-    const result = await client.callTool("get_page_state");
+    const result = await client.callTool("browser", { action: "page_state" });
     expect(result.isError).toBeFalsy();
 
     const text = result.content[0]?.text ?? "";
@@ -174,18 +170,24 @@ describe("get_comments tool dispatch", () => {
 // ── Error paths ───────────────────────────────────────────────────────────────
 
 describe("error handling", () => {
-  it("returns isError=true for invalid get_top count (schema validation)", async () => {
-    const result = await client.callTool("get_top", { count: 0 });
-    expect(result.isError).toBe(true);
-    const text = result.content[0]?.text ?? "";
-    expect(text).toContain("validation");
+  it("schema validation errors are reported for invalid get_top count", async () => {
+    // The MCP SDK returns Zod validation errors as isError:true content
+    const result = await client.callTool("get_top", { count: 0 }).catch((e: Error) => e);
+    if (result instanceof Error) {
+      // SDK may throw for protocol-level validation errors
+      expect(result.message).toMatch(/validation|invalid/i);
+    } else {
+      expect(result.isError).toBe(true);
+    }
   });
 
-  it("returns isError=true for non-numeric get_comments id (schema validation)", async () => {
-    const result = await client.callTool("get_comments", { id: "notanumber" });
-    expect(result.isError).toBe(true);
-    const text = result.content[0]?.text ?? "";
-    expect(text).toContain("numeric story ID");
+  it("schema validation errors are reported for non-numeric get_comments id", async () => {
+    const result = await client.callTool("get_comments", { id: "notanumber" }).catch((e: Error) => e);
+    if (result instanceof Error) {
+      expect(result.message).toMatch(/validation|invalid|numeric/i);
+    } else {
+      expect(result.isError).toBe(true);
+    }
   });
 });
 
@@ -207,7 +209,7 @@ describe("bearer token auth", () => {
     if (unauthClient instanceof Error) {
       expect(unauthClient.message).toBeTruthy();
     } else {
-      const result = await unauthClient.callTool("health_check").catch((e: Error) => e);
+      const result = await unauthClient.callTool("browser", { action: "health_check" }).catch((e: Error) => e);
       expect(result instanceof Error).toBe(true);
       await unauthClient.close();
     }

@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout this adapter repo
+      - uses: actions/checkout@v4
+        with:
+          path: adapter-hackernews
+
+      # Checkout browserkit core alongside it so the file: dep resolves
+      - uses: actions/checkout@v4
+        with:
+          repository: browserkit-dev/browserkit
+          path: browserkit
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Build core first so its dist/ is available
+      - name: Install & build @browserkit/core
+        working-directory: browserkit
+        run: |
+          npm install -g pnpm
+          pnpm install --frozen-lockfile
+          pnpm --filter @browserkit/core build
+
+      # Point adapter's @browserkit/core dep at the checked-out core
+      - name: Patch @browserkit/core dep path
+        working-directory: adapter-hackernews
+        run: |
+          npm pkg set 'devDependencies.@browserkit/core'='file:../browserkit/packages/core'
+          npm pkg set 'peerDependencies.@browserkit/core'='>=0.1.0'
+
+      - name: Install adapter dependencies
+        working-directory: adapter-hackernews
+        run: npm install
+
+      - name: Install Playwright Chromium
+        working-directory: adapter-hackernews
+        run: npx playwright install chromium --with-deps
+
+      - name: Build
+        working-directory: adapter-hackernews
+        run: npm run build
+
+      # L1 unit + L3 protocol + L4 reliability (HN is public — network OK in CI)
+      # L2 integration tests skipped (they're in *.integration.test.ts which is excluded by default vitest config)
+      - name: Test
+        working-directory: adapter-hackernews
+        run: npm test
+        timeout-minutes: 10
