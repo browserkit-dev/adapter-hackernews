@@ -1,6 +1,6 @@
 import { defineAdapter } from "@browserkit/core";
 import { z } from "zod";
-import type { Page } from "playwright";
+import type { Page } from "patchright";
 import { SELECTORS } from "./selectors.js";
 
 // ─── Types ────────────────────────────────────────────────────────────────────

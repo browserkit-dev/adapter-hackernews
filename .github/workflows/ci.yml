@@ -48,7 +48,7 @@ jobs:
 
       - name: Install Playwright Chromium
         working-directory: adapter-hackernews
-        run: npx playwright install chromium --with-deps
+        run: npx patchright install chromium --with-deps
 
       - name: Build
         working-directory: adapter-hackernews
