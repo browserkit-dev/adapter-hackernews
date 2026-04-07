@@ -131,6 +131,7 @@ const FEED_TOOLS = [
 
 export default defineAdapter({
   site: "hackernews",
+  minCoreVersion: "0.1.0",
   domain: "news.ycombinator.com",
   loginUrl: "https://news.ycombinator.com/login",
   selectors: SELECTORS,
