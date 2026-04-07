@@ -6,8 +6,8 @@
  */
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import hackernewsAdapter from "../src/index.js";
-import { createTestAdapterServer, type TestAdapterServer } from "@browserkit/core/testing";
-import { createTestMcpClient } from "@browserkit/core/testing";
+import { createTestAdapterServer, type TestAdapterServer } from "@browserkit-dev/core/testing";
+import { createTestMcpClient } from "@browserkit-dev/core/testing";
 
 // ── Shared server ─────────────────────────────────────────────────────────────
 

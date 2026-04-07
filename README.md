@@ -1,4 +1,4 @@
-# @browserkit/adapter-hackernews
+# @browserkit-dev/adapter-hackernews
 
 [Hacker News](https://news.ycombinator.com) adapter for [browserkit](https://github.com/browserkit-dev/browserkit) — exposes HN as MCP tools over a persistent headless browser session.
 
@@ -18,17 +18,17 @@ Plus 5 auto-registered management tools from the framework: `health_check`, `set
 
 ```js
 // browserkit.config.js
-import { defineConfig } from "@browserkit/core";
+import { defineConfig } from "@browserkit-dev/core";
 
 export default defineConfig({
   adapters: {
-    "@browserkit/adapter-hackernews": { port: 3847 },
+    "@browserkit-dev/adapter-hackernews": { port: 3847 },
   },
 });
 ```
 
 ```bash
-npx @browserkit/core start
+npx @browserkit-dev/core start
 ```
 
 Connect any MCP client to `http://127.0.0.1:3847/mcp`.

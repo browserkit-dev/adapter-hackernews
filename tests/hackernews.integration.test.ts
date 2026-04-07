@@ -3,12 +3,12 @@
  *
  * Runs a real headless browser against live Hacker News.
  * These tests require network access and are NOT run in CI by default.
- * Run with: pnpm --filter @browserkit/adapter-hackernews test:integration
+ * Run with: pnpm --filter @browserkit-dev/adapter-hackernews test:integration
  */
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import hackernewsAdapter from "../src/index.js";
-import { createTestAdapterServer, type TestAdapterServer } from "@browserkit/core/testing";
-import { createTestMcpClient, type TestMcpClient } from "@browserkit/core/testing";
+import { createTestAdapterServer, type TestAdapterServer } from "@browserkit-dev/core/testing";
+import { createTestMcpClient, type TestMcpClient } from "@browserkit-dev/core/testing";
 
 // ── Shared server (one browser for the whole integration suite) ───────────────
 
